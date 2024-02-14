@@ -1,34 +1,30 @@
 <script lang="ts">
     import ToDo from "$lib/ToDo.svelte";
     import { addTodo, deleteCompleted, todos } from "../store/store";
+    import { isValidDate } from "$lib/utils";
 
-    let inputText: HTMLInputElement;
-    let inputDate: HTMLInputElement;
+    let inputText: string = "";
+    let inputDate: string = "";
     let error: string;
 
     $: remaining = $todos.filter((todo) => !todo.done).length;
 
     const handleCreate = () => {
-        if (!inputText.value.trim()) {
+        if (!inputText.trim()) {
             error = "Please enter a todo";
             return;
         }
 
-        if (inputDate.value.trim() === "") {
-            error = "Please enter a date";
-            return;
-        }
-
-        if (new Date(inputDate.value) < new Date()) {
+        if (!inputDate.trim() || !isValidDate(inputDate)) {
             error = "Please enter a valid date";
             return;
         }
 
         error = "";
-        addTodo(inputText.value, new Date(inputDate.value));
-        inputText.value = "";
+        addTodo({ text: inputText, dueDate: new Date(inputDate) });
+        inputText = "";
+        inputDate = "";
     };
-
     const handleDeleteDone = () => {
         deleteCompleted();
     };
@@ -43,17 +39,16 @@
         <label for="text" class="text-base font-semibold"> Text: </label>
         <div class="flex gap-2">
             <input
-                bind:this={inputText}
-                name="text"
-                type="text"
+                bind:value={inputText}
                 class="border border-1 border-gray-400 rounded py-1 px-2"
-                required
+                placeholder="Todo text"
             />
+
             <input
-                bind:this={inputDate}
                 type="Date"
                 class="border border-1 border-gray-400 rounded py-1 px-2"
                 required
+                bind:value={inputDate}
             />
             <button
                 class="bg-blue-500 text-white rounded py-1 px-2"
@@ -62,8 +57,9 @@
         </div>
     </form>
     {#if error}
-        <p class="text-red-500">{error}</p>
+        <p class="text-red-500" aria-live="assertive">{error}</p>
     {/if}
+
     <div id="todos">
         {#each $todos as todo (todo.id)}
             <ToDo bind:todo />
