@@ -2,20 +2,31 @@
     import ToDo from "$lib/ToDo.svelte";
     import { addTodo, deleteCompleted, todos } from "../store/store";
 
-    let inputCreate: HTMLInputElement;
+    let inputText: HTMLInputElement;
+    let inputDate: HTMLInputElement;
     let error: string;
 
     $: remaining = $todos.filter((todo) => !todo.done).length;
 
     const handleCreate = () => {
-        if (!inputCreate.value.trim()) {
+        if (!inputText.value.trim()) {
             error = "Please enter a todo";
             return;
         }
 
+        if (inputDate.value.trim() === "") {
+            error = "Please enter a date";
+            return;
+        }
+
+        if (new Date(inputDate.value) < new Date()) {
+            error = "Please enter a valid date";
+            return;
+        }
+
         error = "";
-        addTodo(inputCreate.value);
-        inputCreate.value = "";
+        addTodo(inputText.value, new Date(inputDate.value));
+        inputText.value = "";
     };
 
     const handleDeleteDone = () => {
@@ -32,9 +43,15 @@
         <label for="text" class="text-base font-semibold"> Text: </label>
         <div class="flex gap-2">
             <input
-                bind:this={inputCreate}
+                bind:this={inputText}
                 name="text"
                 type="text"
+                class="border border-1 border-gray-400 rounded py-1 px-2"
+                required
+            />
+            <input
+                bind:this={inputDate}
+                type="Date"
                 class="border border-1 border-gray-400 rounded py-1 px-2"
                 required
             />
